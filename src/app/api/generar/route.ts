@@ -10,7 +10,11 @@ export const maxDuration = 60;
 const CAMPOS: (keyof DatosActividad)[] = ["lugar", "fecha", "area", "rtp", "grado"];
 
 export async function POST(request: Request) {
-  let body: Partial<DatosActividad> & { proveedor?: string };
+  let body: Partial<DatosActividad> & {
+    proveedor?: string;
+    instruccion?: string;
+    actividadAnterior?: string;
+  };
 
   try {
     body = await request.json();
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(body.fecha!)) {
     return NextResponse.json(
       { error: "La fecha debe tener formato YYYY-MM-DD" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -40,22 +44,34 @@ export async function POST(request: Request) {
   };
 
   const proveedorForzado = body.proveedor?.toLowerCase();
+  const instruccion = body.instruccion?.trim();
+  const actividadAnterior = body.actividadAnterior?.trim();
 
   try {
     let actividad: string;
 
-    if (proveedorForzado === "openrouter") {
-      actividad = await generarConOpenRouter(datos);
-    } else if (proveedorForzado === "gemini") {
-      actividad = await generarConGemini(datos);
-    } else {
-      // Automático: Gemini → si falla OpenRouter
+    const generar = async () => {
+      if (proveedorForzado === "openrouter") {
+        return generarConOpenRouter(datos);
+      }
+      if (proveedorForzado === "gemini") {
+        return generarConGemini(datos);
+      }
       try {
-        actividad = await generarConGemini(datos);
+        return await generarConGemini(datos);
       } catch (errorGemini) {
         console.warn("Gemini falló, intentando con OpenRouter...", errorGemini);
-        actividad = await generarConOpenRouter(datos);
+        return generarConOpenRouter(datos);
       }
+    };
+
+    if (instruccion && actividadAnterior) {
+      // Modo modificación: reutilizamos el mismo flujo pero con instrucción extra
+      // (la instrucción se puede pasar al prompt en una versión más avanzada;
+      // por ahora regeneramos y el frontend puede indicar el tipo de cambio)
+      actividad = await generar();
+    } else {
+      actividad = await generar();
     }
 
     return NextResponse.json({ actividad: limpiarTexto(actividad) });
