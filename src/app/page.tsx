@@ -12,12 +12,11 @@ const AREAS = [
   "Educación Física",
   "Educación Artística",
 ];
-
 const OTRA = "Otra";
 const GRADO = "cuarto grado";
 
 const CLASE_CAMPO =
-  "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200";
+  "mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 const CLASE_ETIQUETA = "block text-sm font-medium text-gray-700";
 
 function fechaHoy(): string {
@@ -64,10 +63,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    // Detectar si ya está instalada
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      return;
-    }
+    if (window.matchMedia("(display-mode: standalone)").matches) return;
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -76,21 +72,14 @@ export default function Home() {
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-    };
+    return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
   async function instalarApp() {
     if (!deferredPrompt) return;
-
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === "accepted") {
-      setMostrarInstalar(false);
-    }
+    if (outcome === "accepted") setMostrarInstalar(false);
     setDeferredPrompt(null);
   }
 
@@ -121,7 +110,6 @@ export default function Home() {
         grado: GRADO,
       };
 
-      // Solo enviamos el proveedor si no es "auto"
       if (proveedor !== "auto") {
         body.proveedor = proveedor;
       }
@@ -174,179 +162,212 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-8 text-gray-900">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="text-2xl font-bold">Generador de actividades</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Cuarto grado · crea la actividad del día con IA
-        </p>
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-8 text-gray-900">
+      <div className="mx-auto max-w-2xl">
+        {/* Header */}
+        <header className="mb-8 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-xl font-bold text-white shadow-md shadow-blue-200">
+            A
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+            Generador de actividades
+          </h1>
+          <p className="mt-1.5 text-sm text-gray-500">
+            Cuarto grado · crea la actividad del día con IA
+          </p>
+        </header>
 
+        {/* Banner instalar */}
         {mostrarInstalar && (
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-blue-50 px-4 py-3 ring-1 ring-blue-200">
-            <div>
-              <p className="text-sm font-medium text-blue-900">
+          <div className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-blue-100 bg-blue-50/80 px-4 py-3.5 shadow-sm backdrop-blur">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-blue-900">
                 Instalar aplicación
               </p>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs text-blue-700/80">
                 Acceso rápido desde tu pantalla de inicio
               </p>
             </div>
             <button
               type="button"
               onClick={instalarApp}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-95"
             >
               Instalar
             </button>
           </div>
         )}
 
+        {/* Formulario */}
         <form
           onSubmit={generar}
-          className="mt-6 grid gap-4 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200 sm:grid-cols-2"
+          className="rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm sm:p-6"
         >
-          <div>
-            <label htmlFor="lugar" className={CLASE_ETIQUETA}>
-              Lugar
-            </label>
-            <input
-              id="lugar"
-              lang="es"
-              spellCheck
-              value={lugar}
-              onChange={(e) => setLugar(e.target.value)}
-              onBlur={() => setLugar(capitalizar(lugar))}
-              className={CLASE_CAMPO}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="fecha" className={CLASE_ETIQUETA}>
-              Fecha
-            </label>
-            <input
-              id="fecha"
-              type="date"
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
-              className={CLASE_CAMPO}
-            />
-          </div>
-
-          <div className={areaSeleccion === OTRA ? "" : "sm:col-span-2"}>
-            <label htmlFor="area" className={CLASE_ETIQUETA}>
-              Área
-            </label>
-            <select
-              id="area"
-              value={areaSeleccion}
-              onChange={(e) => setAreaSeleccion(e.target.value)}
-              className={CLASE_CAMPO}
-            >
-              {AREAS.map((nombre) => (
-                <option key={nombre} value={nombre}>
-                  {nombre}
-                </option>
-              ))}
-              <option value={OTRA}>{OTRA}…</option>
-            </select>
-          </div>
-
-          {areaSeleccion === OTRA && (
+          <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label htmlFor="areaOtra" className={CLASE_ETIQUETA}>
-                Escribe el área
+              <label htmlFor="lugar" className={CLASE_ETIQUETA}>
+                Lugar
               </label>
               <input
-                id="areaOtra"
+                id="lugar"
                 lang="es"
                 spellCheck
-                value={areaOtra}
-                onChange={(e) => setAreaOtra(e.target.value)}
-                onBlur={() => setAreaOtra(capitalizar(areaOtra))}
-                placeholder="Ej. Formación para la soberanía"
+                value={lugar}
+                onChange={(e) => setLugar(e.target.value)}
+                onBlur={() => setLugar(capitalizar(lugar))}
                 className={CLASE_CAMPO}
               />
             </div>
-          )}
 
-          <div className="sm:col-span-2">
-            <label htmlFor="rtp" className={CLASE_ETIQUETA}>
-              Tema (RTP)
-            </label>
-            <input
-              id="rtp"
-              lang="es"
-              spellCheck
-              value={rtp}
-              onChange={(e) => setRtp(e.target.value)}
-              onBlur={() => setRtp(capitalizar(rtp))}
-              placeholder="Ej. Multiplicación de números decimales"
-              className={CLASE_CAMPO}
-            />
+            <div>
+              <label htmlFor="fecha" className={CLASE_ETIQUETA}>
+                Fecha
+              </label>
+              <input
+                id="fecha"
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className={CLASE_CAMPO}
+              />
+            </div>
+
+            <div className={areaSeleccion === OTRA ? "" : "sm:col-span-2"}>
+              <label htmlFor="area" className={CLASE_ETIQUETA}>
+                Área
+              </label>
+              <select
+                id="area"
+                value={areaSeleccion}
+                onChange={(e) => setAreaSeleccion(e.target.value)}
+                className={CLASE_CAMPO}
+              >
+                {AREAS.map((nombre) => (
+                  <option key={nombre} value={nombre}>
+                    {nombre}
+                  </option>
+                ))}
+                <option value={OTRA}>{OTRA}…</option>
+              </select>
+            </div>
+
+            {areaSeleccion === OTRA && (
+              <div>
+                <label htmlFor="areaOtra" className={CLASE_ETIQUETA}>
+                  Escribe el área
+                </label>
+                <input
+                  id="areaOtra"
+                  lang="es"
+                  spellCheck
+                  value={areaOtra}
+                  onChange={(e) => setAreaOtra(e.target.value)}
+                  onBlur={() => setAreaOtra(capitalizar(areaOtra))}
+                  placeholder="Ej. Formación para la soberanía"
+                  className={CLASE_CAMPO}
+                />
+              </div>
+            )}
+
+            <div className="sm:col-span-2">
+              <label htmlFor="rtp" className={CLASE_ETIQUETA}>
+                Tema (RTP)
+              </label>
+              <input
+                id="rtp"
+                lang="es"
+                spellCheck
+                value={rtp}
+                onChange={(e) => setRtp(e.target.value)}
+                onBlur={() => setRtp(capitalizar(rtp))}
+                placeholder="Ej. Multiplicación de números decimales"
+                className={CLASE_CAMPO}
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="proveedor" className={CLASE_ETIQUETA}>
+                Modelo de IA
+              </label>
+              <select
+                id="proveedor"
+                value={proveedor}
+                onChange={(e) =>
+                  setProveedor(
+                    e.target.value as "auto" | "gemini" | "openrouter",
+                  )
+                }
+                className={CLASE_CAMPO}
+              >
+                <option value="auto">
+                  Automático (Gemini → OpenRouter si falla)
+                </option>
+                <option value="gemini">Solo Gemini</option>
+                <option value="openrouter">Solo OpenRouter</option>
+              </select>
+            </div>
           </div>
 
-          {/* Selector de proveedor */}
-          <div className="sm:col-span-2">
-            <label htmlFor="proveedor" className={CLASE_ETIQUETA}>
-              Modelo de IA
-            </label>
-            <select
-              id="proveedor"
-              value={proveedor}
-              onChange={(e) =>
-                setProveedor(e.target.value as "auto" | "gemini" | "openrouter")
-              }
-              className={CLASE_CAMPO}
-            >
-              <option value="auto">
-                Automático (Gemini → OpenRouter si falla)
-              </option>
-              <option value="gemini">Solo Gemini</option>
-              <option value="openrouter">Solo OpenRouter</option>
-            </select>
-          </div>
-
-          <div className="sm:col-span-2">
-            <button
-              type="submit"
-              disabled={cargando}
-              className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {cargando
-                ? "Generando… puede tardar unos segundos"
-                : "Generar actividad"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={cargando}
+            className="mt-6 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-blue-200 transition hover:bg-blue-700 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none"
+          >
+            {cargando ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+                Generando… puede tardar unos segundos
+              </span>
+            ) : (
+              "Generar actividad"
+            )}
+          </button>
         </form>
 
+        {/* Error */}
         {error && (
-          <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+          <div className="mt-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3.5 text-sm text-red-700">
             {error}
-          </p>
+          </div>
         )}
 
+        {/* Resultado */}
         {actividad && (
-          <section className="mt-6 rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <label
-                htmlFor="resultado"
-                className="text-sm font-medium text-gray-700"
-              >
-                Actividad (puedes editarla antes de usarla)
-              </label>
+          <section className="mt-6 overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+              <h2 className="text-sm font-semibold text-gray-800">
+                Actividad generada
+              </h2>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={copiar}
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
                 >
                   {copiado ? "¡Copiado!" : "Copiar"}
                 </button>
                 <button
                   type="button"
                   onClick={descargar}
-                  className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700"
+                  className="rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-gray-800"
                 >
                   Descargar Word
                 </button>
@@ -359,14 +380,13 @@ export default function Home() {
               spellCheck
               value={actividad}
               onChange={(e) => setActividad(e.target.value)}
-              rows={28}
-              className="mt-3 w-full rounded-lg border border-gray-300 bg-white p-3 font-mono text-sm leading-relaxed text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              rows={26}
+              className="w-full resize-y border-0 bg-slate-50/50 p-5 font-mono text-sm leading-relaxed text-gray-800 outline-none focus:ring-0"
             />
 
-            <p className="mt-2 text-xs text-gray-500">
-              Revisa siempre el contenido y las respuestas antes de entregarlo a
-              los estudiantes. No escribas nombres de alumnos ni datos
-              personales.
+            <p className="border-t border-gray-100 px-5 py-3 text-xs text-gray-500">
+              Revisa siempre el contenido antes de entregarlo a los estudiantes.
+              No escribas nombres de alumnos ni datos personales.
             </p>
           </section>
         )}
